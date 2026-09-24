@@ -1,0 +1,1574 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 15.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     61818,       1564]
+NotebookOptionsPosition[     58879,       1504]
+NotebookOutlinePosition[     59355,       1522]
+CellTagsIndexPosition[     59312,       1519]
+WindowTitle->Scaling backgrounds: compact spectra
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Scaling backgrounds: spectra and reproducible backgrounds", "Title",ExpressionUUID->"1d9bf42c-3a83-b641-9e87-37f0b277ca73"],
+
+Cell["\<\
+Warning: Keep this notebook beside its three data JSON files. Evaluate the \
+single Initialization cell to import all data and define every function. 
+
+The notebook imports the following files:
+- scaling_backgrounds.json supplies the catalogue, supersymmetry, symmetry, g \
+L_AdS, eta, mass spectra and BF stability. 
+- model_22_scalars.json supplies the ordered 22 scalar fields and explicit \
+expressions for V, h1 and h2m. 
+- backgrounds_22_scalars.json supplies their numerical values in the field \
+order defined by model_22_scalars.json. \[LineSeparator]
+The database contains the 78 currently known scale covariant background with \
+an Index running from 1 to 78 in descending order of g L_AdS. Each background \
+has an additional label Zxxxxxx using the first six digits after the decimal \
+point in the numeric value of g L_AdS, without rounding.
+
+The JSON field L_AdS stores g L_AdS from Eq. (5), evaluated at g=1. For d=3 \
+and k=-1. The catalogue, background values, labels and equations all use the \
+same scalar frame.
+
+Definitions (all functions accept an index or label):
+- fields lists all 22 scalars. \[LineSeparator]- scalingEquations defines the \
+third line of Eq. (5), with d=3 and k=-1, differentiated with respect to the \
+21 shape fields.
+- backgroundEquations eliminates eta and LAdS using the first two lines. The \
+running varphi is included in fields and is set to zero in the tabulated \
+reference slice. 
+- GetBackground[x] returns their numerical values in fields order. 
+- ListBackgrounds[] displays Index, Label, g LAdS, eta, Continuous symmetry \
+group, Discrete symmetry group, SUSY and BF stable for all backgrounds. \
+Optional arguments \[OpenCurlyDoubleQuote]SUSY\[CloseCurlyDoubleQuote] and \
+\[OpenCurlyDoubleQuote]BF_stable\[CloseCurlyDoubleQuote] restrict to the \
+relevant subset of backgrounds.
+- indexForLabel[\"Z666666\"] returns the index for that \
+label.\[LineSeparator]- label[i] returns the label for that index.
+- AdSLength[i], etaValue[i], supersymmetry[i] and globalSymmetry[i] read the \
+corresponding catalogue quantities.
+- BackgroundRules[x] gives field substitutions.
+- BFStable[x] returns a Boolean; \[LineSeparator]- continuousSymmetryGroup[x] \
+returns the continuous group name; \[LineSeparator]- discreteSymmetryGroup[x] \
+returns the identified discrete symmetry modulo the connected continuous \
+group H0.
+- MassSpectrum[x, sector] returns numerical levels with multiplicities and \
+their definitions.  The displayed values give M^2L^2 for bosonic fluctuations \
+and M L for fermionic fluctuations.
+- BackgroundSummary[x] returns the key properties as an association; \
+\[LineSeparator]- BackgroundTableData[] returns these associations for all \
+backgrounds.
+- BackgroundResidual[x] returns the 21 shape-equation residuals. \
+\[LineSeparator]- CheckBackground[x] also checks the first two lines of Eq. \
+(5), returning the largest absolute residual and Below threshold only when it \
+is strictly below 10^-10. \[LineSeparator]- CheckAllBackgrounds[] displays \
+these checks for all backgrounds.
+
+Discrete symmetries are verified subgroup results modulo H0, without a \
+completeness claim or an implied direct product with H0. D8 denotes the \
+dihedral group of order 8; None found means no additional component was found \
+within the search performed, and does not assert its absence. \
+\>", "Abstract",
+ CellChangeTimes->{{3.9988025877246933`*^9, 3.998802665383087*^9}, {
+   3.9988029533640327`*^9, 3.9988029636521797`*^9}, {3.998982297903219*^9, 
+   3.9989823041095047`*^9}, {3.998982446944971*^9, 3.998982673747984*^9}, 
+   3.9989828256090584`*^9, {3.9989831326616573`*^9, 
+   3.9989831559383926`*^9}},ExpressionUUID->"df26af14-08c8-47df-a845-\
+cf5cfc971f16"],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+Initialisation (Run, do not edit. This can take up to ~30 seconds)\
+\>", "Section",
+ CellChangeTimes->{{3.9989643823385696`*^9, 3.9989643824021626`*^9}, {
+  3.9989696379782734`*^9, 3.998969642836666*^9}, {3.998982273151596*^9, 
+  3.9989822943701687`*^9}},ExpressionUUID->"7298ba20-eb47-b342-bf83-\
+a99ab2a1dee9"],
+
+Cell["\<\
+Evaluate the initialisation cells to import all three database files and \
+define every function. Reevaluate it after replacing data files. \
+\>", "Text",
+ CellChangeTimes->{{3.998964374034109*^9, 
+  3.9989644082289257`*^9}},ExpressionUUID->"e95ee4a4-0352-024b-8516-\
+65306890a898"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"\"\<Global`radius\>\"", ",", " ", "\"\<Global`ModelRadius\>\""}], 
+   "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{
+   "data", ",", " ", "solutions", ",", " ", "solutionCount", ",", " ", 
+    "solutionLabels", ",", " ", "solutionIndices", ",", " ", "solutionIndex", 
+    ",", "spectrumDefinitions", ",", " ", "sectorNames", ",", " ", 
+    "datasetDirectory", ",", " ", "datasetPath", ",", " ", "importData", ",", 
+    " ", "requireData", ",", "parseNumber", ",", " ", "readNumber", ",", " ", 
+    "numericalValue", ",", " ", "finiteNumberQ", ",", " ", "numericRecord", ",",
+     "solutionRecord", ",", " ", "withSolution", ",", "  ", "MassSpectrum", ",",
+     "index", ",", " ", "label", ",", " ", "indexForLabel", ",", " ", 
+    "massQuantities", ",", " ", "AdSLength", ",", " ", "etaValue", ",", 
+    "supersymmetry", ",", " ", "globalSymmetry", ",", " ", "symmetryGroup", ",",
+     " ", "discreteSymmetryGroup", ",", " ", "BFStable", ",", 
+    "BackgroundSummary", ",", " ", "BackgroundTableData", ",", " ", 
+    "ListBackgrounds"}], "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"datasetDirectory", " ", "=", " ", 
+   RowBox[{"If", "[", 
+    RowBox[{
+     RowBox[{"StringQ", "[", "$ScalingBackgroundsNotebookDirectory", "]"}], ",",
+      "$ScalingBackgroundsNotebookDirectory", ",", " ", 
+     RowBox[{"Quiet", "[", 
+      RowBox[{"Check", "[", 
+       RowBox[{
+        RowBox[{"NotebookDirectory", "[", "]"}], ",", " ", "$Failed"}], "]"}],
+       "]"}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"requireData", "[", 
+    RowBox[{"condition_", ",", " ", "name_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"If", "[", 
+    RowBox[{
+     RowBox[{"!", 
+      RowBox[{"TrueQ", "[", "condition", "]"}]}], ",", " ", 
+     RowBox[{
+      RowBox[{"Print", "[", 
+       RowBox[{"Failure", "[", 
+        RowBox[{"name", ",", " ", 
+         RowBox[{"<|", "|>"}]}], "]"}], "]"}], ";", " ", 
+      RowBox[{"Abort", "[", "]"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{"StringQ", "[", "datasetDirectory", "]"}], ",", 
+    " ", "\"\<OpenNotebookBesideDataFiles\>\""}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"importData", "[", "name_String", "]"}], " ", ":=", " ", 
+   RowBox[{"Quiet", "[", 
+    RowBox[{"Check", "[", 
+     RowBox[{
+      RowBox[{"Import", "[", 
+       RowBox[{
+        RowBox[{"FileNameJoin", "[", 
+         RowBox[{"{", 
+          RowBox[{"datasetDirectory", ",", " ", "name"}], "}"}], "]"}], ",", 
+        " ", "\"\<RawJSON\>\""}], "]"}], ",", " ", "$Failed"}], "]"}], 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"datasetPath", " ", "=", " ", 
+   RowBox[{"FileNameJoin", "[", 
+    RowBox[{"{", 
+     RowBox[{
+     "datasetDirectory", ",", " ", "\"\<scaling_backgrounds.json\>\""}], 
+     "}"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"data", " ", "=", " ", 
+   RowBox[{"importData", "[", "\"\<scaling_backgrounds.json\>\"", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"AssociationQ", "[", "data", "]"}], " ", "&&", " ", 
+     RowBox[{"ListQ", "[", 
+      RowBox[{"data", "[", "\"\<solutions\>\"", "]"}], "]"}], " ", "&&", 
+     RowBox[{"AssociationQ", "[", 
+      RowBox[{"data", "[", "\"\<spectrum_definitions\>\"", "]"}], "]"}]}], ",",
+     " ", "\"\<CatalogueImportFailed\>\""}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"sectorNames", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{"\"\<scalars\>\"", ",", " ", "\"\<spin_one_half\>\"", ",", 
+     " ", "\"\<vectors\>\"", ",", " ", "\"\<spin_three_halves\>\"", ",", 
+     " ", "\"\<spin_two\>\""}], "}"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"spectrumDefinitions", " ", "=", " ", 
+   RowBox[{"data", "[", "\"\<spectrum_definitions\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"solutionCount", " ", "=", " ", 
+   RowBox[{"Length", "[", 
+    RowBox[{"data", "[", "\"\<solutions\>\"", "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"solutionLabels", " ", "=", " ", 
+   RowBox[{"Lookup", "[", 
+    RowBox[{
+     RowBox[{"data", "[", "\"\<solutions\>\"", "]"}], ",", 
+     " ", "\"\<label\>\""}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"solutionIndices", " ", "=", " ", 
+   RowBox[{"Lookup", "[", 
+    RowBox[{
+     RowBox[{"data", "[", "\"\<solutions\>\"", "]"}], ",", 
+     " ", "\"\<index\>\""}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"solutionCount", " ", ">", " ", "0"}], " ", "&&", " ", 
+     RowBox[{"solutionCount", " ", "===", " ", 
+      RowBox[{"data", "[", "\"\<solution_count\>\"", "]"}]}], " ", "&&", 
+     RowBox[{"DuplicateFreeQ", "[", "solutionLabels", "]"}], " ", "&&", " ", 
+     RowBox[{"VectorQ", "[", 
+      RowBox[{"solutionLabels", ",", " ", "StringQ"}], "]"}], " ", "&&", 
+     RowBox[{"solutionIndices", " ", "===", " ", 
+      RowBox[{"Range", "[", "solutionCount", "]"}]}], " ", "&&", 
+     RowBox[{
+      RowBox[{"Sort", "[", 
+       RowBox[{"Keys", "[", "spectrumDefinitions", "]"}], "]"}], " ", "===", 
+      " ", 
+      RowBox[{"Sort", "[", "sectorNames", "]"}]}]}], ",", 
+    " ", "\"\<UnexpectedCatalogueShape\>\""}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"solutionIndex", " ", "=", " ", 
+   RowBox[{"AssociationThread", "[", 
+    RowBox[{"solutionLabels", " ", "->", " ", "solutionIndices"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"parseNumber", " ", "=", " ", 
+   RowBox[{"Interpreter", "[", "\"\<Number\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"finiteNumberQ", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{
+    RowBox[{"NumberQ", "[", "x", "]"}], " ", "&&", " ", 
+    RowBox[{"FreeQ", "[", 
+     RowBox[{"x", ",", " ", 
+      RowBox[{
+      "Indeterminate", " ", "|", " ", "ComplexInfinity", " ", "|", " ", 
+       RowBox[{"_", "DirectedInfinity"}]}]}], "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"readNumber", "[", "s_String", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"value", " ", "=", " ", 
+       RowBox[{"parseNumber", "[", "s", "]"}]}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"finiteNumberQ", "[", "value", "]"}], " ", "&&", " ", 
+        RowBox[{"TrueQ", "[", 
+         RowBox[{
+          RowBox[{"Im", "[", "value", "]"}], " ", "==", " ", "0"}], "]"}]}], ",",
+        " ", 
+       RowBox[{"N", "[", 
+        RowBox[{"value", ",", " ", "MachinePrecision"}], "]"}], ",", 
+       RowBox[{"Failure", "[", 
+        RowBox[{"\"\<InvalidNumericalValue\>\"", ",", " ", 
+         RowBox[{"<|", 
+          RowBox[{"\"\<Input\>\"", " ", "->", " ", "s"}], "|>"}]}], "]"}]}], 
+      "]"}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"readNumber", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"Failure", "[", 
+    RowBox[{"\"\<ExpectedDecimalString\>\"", ",", " ", 
+     RowBox[{"<|", 
+      RowBox[{"\"\<Input\>\"", " ", "->", " ", "x"}], "|>"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"numericalValue", "[", "v_Association", "]"}], " ", ":=", " ", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"re", " ", "=", " ", 
+        RowBox[{"readNumber", "[", 
+         RowBox[{"v", "[", "\"\<re\>\"", "]"}], "]"}]}], ",", " ", 
+       RowBox[{"im", " ", "=", " ", 
+        RowBox[{"readNumber", "[", 
+         RowBox[{"v", "[", "\"\<im\>\"", "]"}], "]"}]}]}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"finiteNumberQ", "[", "re", "]"}], " ", "&&", " ", 
+        RowBox[{"finiteNumberQ", "[", "im", "]"}]}], ",", " ", 
+       RowBox[{"re", " ", "+", " ", 
+        RowBox[{"I", " ", "im"}]}], ",", 
+       RowBox[{"Failure", "[", 
+        RowBox[{"\"\<InvalidComplexValue\>\"", ",", " ", 
+         RowBox[{"<|", 
+          RowBox[{"\"\<Input\>\"", " ", "->", " ", "v"}], "|>"}]}], "]"}]}], 
+      "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"numericRecord", "[", "record_Association", "]"}], " ", ":=", 
+   RowBox[{"Join", "[", 
+    RowBox[{"record", ",", " ", 
+     RowBox[{"<|", 
+      RowBox[{
+       RowBox[{"\"\<L_AdS\>\"", " ", "->", " ", 
+        RowBox[{"readNumber", "[", 
+         RowBox[{"record", "[", "\"\<L_AdS\>\"", "]"}], "]"}]}], ",", " ", 
+       RowBox[{"\"\<eta\>\"", " ", "->", " ", 
+        RowBox[{"readNumber", "[", 
+         RowBox[{"record", "[", "\"\<eta\>\"", "]"}], "]"}]}], ",", 
+       RowBox[{"\"\<masses\>\"", " ", "->", " ", 
+        RowBox[{"Map", "[", 
+         RowBox[{
+          RowBox[{"Function", "[", 
+           RowBox[{"sector", ",", " ", 
+            RowBox[{"Join", "[", 
+             RowBox[{"sector", ",", " ", 
+              RowBox[{"<|", 
+               RowBox[{"\"\<levels\>\"", " ", "->", 
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{
+                   RowBox[{"Join", "[", 
+                    RowBox[{"#", ",", " ", 
+                    RowBox[{"<|", 
+                    RowBox[{"\"\<value\>\"", " ", "->", " ", 
+                    RowBox[{"numericalValue", "[", 
+                    RowBox[{"#", "[", "\"\<value\>\"", "]"}], "]"}]}], 
+                    "|>"}]}], "]"}], " ", "&"}], " ", "/@", " ", 
+                  RowBox[{"sector", "[", "\"\<levels\>\"", "]"}]}], ")"}]}], 
+               "|>"}]}], "]"}]}], "]"}], ",", 
+          RowBox[{"record", "[", "\"\<masses\>\"", "]"}]}], "]"}]}]}], 
+      "|>"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"solutions", " ", "=", " ", 
+   RowBox[{"numericRecord", " ", "/@", " ", 
+    RowBox[{"data", "[", "\"\<solutions\>\"", "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"VectorQ", "[", 
+      RowBox[{
+       RowBox[{"Join", "[", 
+        RowBox[{
+         RowBox[{"Lookup", "[", 
+          RowBox[{"solutions", ",", " ", "\"\<L_AdS\>\""}], "]"}], ",", " ", 
+         RowBox[{"Lookup", "[", 
+          RowBox[{"solutions", ",", " ", "\"\<eta\>\""}], "]"}]}], "]"}], ",",
+        " ", "finiteNumberQ"}], "]"}], " ", "&&", 
+     RowBox[{"And", " ", "@@", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"#", " ", ">", " ", "0"}], " ", "&"}], " ", "/@", " ", 
+        RowBox[{"Lookup", "[", 
+         RowBox[{"solutions", ",", " ", "\"\<L_AdS\>\""}], "]"}]}], ")"}]}], 
+     " ", "&&", 
+     RowBox[{"OrderedQ", "[", 
+      RowBox[{"-", 
+       RowBox[{"Lookup", "[", 
+        RowBox[{"solutions", ",", " ", "\"\<L_AdS\>\""}], "]"}]}], "]"}], " ",
+      "&&", 
+     RowBox[{"And", " ", "@@", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"MemberQ", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"True", ",", " ", "False"}], "}"}], ",", " ", "#"}], 
+          "]"}], " ", "&"}], " ", "/@", " ", 
+        RowBox[{"Lookup", "[", 
+         RowBox[{"solutions", ",", " ", "\"\<BF stability\>\""}], "]"}]}], 
+       ")"}]}]}], ",", "\"\<InvalidCatalogueNumericalData\>\""}], "]"}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{"And", " ", "@@", " ", 
+     RowBox[{"Flatten", "[", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{"With", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"sector", " ", "=", " ", 
+            RowBox[{
+             RowBox[{"record", "[", "\"\<masses\>\"", "]"}], "[", "name", 
+             "]"}]}], "}"}], ",", 
+          RowBox[{
+           RowBox[{"VectorQ", "[", 
+            RowBox[{
+             RowBox[{"Lookup", "[", 
+              RowBox[{
+               RowBox[{"sector", "[", "\"\<levels\>\"", "]"}], ",", 
+               " ", "\"\<value\>\""}], "]"}], ",", " ", "finiteNumberQ"}], 
+            "]"}], " ", "&&", 
+           RowBox[{"VectorQ", "[", 
+            RowBox[{
+             RowBox[{"Lookup", "[", 
+              RowBox[{
+               RowBox[{"sector", "[", "\"\<levels\>\"", "]"}], ",", 
+               " ", "\"\<multiplicity\>\""}], "]"}], ",", " ", 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{
+                RowBox[{"IntegerQ", "[", "#", "]"}], " ", "&&", " ", 
+                RowBox[{"#", " ", ">", " ", "0"}]}], ")"}], " ", "&"}]}], 
+            "]"}], " ", "&&", 
+           RowBox[{
+            RowBox[{"Total", "[", 
+             RowBox[{"Lookup", "[", 
+              RowBox[{
+               RowBox[{"sector", "[", "\"\<levels\>\"", "]"}], ",", 
+               " ", "\"\<multiplicity\>\""}], "]"}], "]"}], " ", "===", " ", 
+            RowBox[{
+            "sector", "[", "\"\<physical_field_count\>\"", "]"}]}]}]}], "]"}],
+         ",", 
+        RowBox[{"{", 
+         RowBox[{"record", ",", " ", "solutions"}], "}"}], ",", " ", 
+        RowBox[{"{", 
+         RowBox[{"name", ",", " ", "sectorNames"}], "}"}]}], "]"}], "]"}]}], ",",
+     " ", "\"\<InvalidSpectrumData\>\""}], "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"solutionRecord", "[", "x_Integer", "]"}], " ", ":=", " ", 
+   RowBox[{"If", "[", 
+    RowBox[{
+     RowBox[{"1", " ", "<=", " ", "x", " ", "<=", " ", "solutionCount"}], ",",
+      " ", 
+     RowBox[{"solutions", "[", 
+      RowBox[{"[", "x", "]"}], "]"}], ",", 
+     RowBox[{"Failure", "[", 
+      RowBox[{"\"\<BackgroundIndexOutOfRange\>\"", ",", " ", 
+       RowBox[{"<|", 
+        RowBox[{
+         RowBox[{"\"\<Index\>\"", " ", "->", " ", "x"}], ",", " ", 
+         RowBox[{"\"\<Count\>\"", " ", "->", " ", "solutionCount"}]}], 
+        "|>"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"solutionRecord", "[", "x_String", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"i", " ", "=", " ", 
+       RowBox[{"Lookup", "[", 
+        RowBox[{"solutionIndex", ",", " ", "x", ",", " ", 
+         RowBox[{"Missing", "[", "\"\<NotFound\>\"", "]"}]}], "]"}]}], "}"}], 
+     ",", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{"MissingQ", "[", "i", "]"}], ",", " ", 
+       RowBox[{"Failure", "[", 
+        RowBox[{"\"\<UnknownBackground\>\"", ",", " ", 
+         RowBox[{"<|", 
+          RowBox[{"\"\<Label\>\"", " ", "->", " ", "x"}], "|>"}]}], "]"}], ",",
+        " ", 
+       RowBox[{"solutions", "[", 
+        RowBox[{"[", "i", "]"}], "]"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"solutionRecord", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"Failure", "[", 
+    RowBox[{"\"\<BackgroundRequiresIndexOrLabel\>\"", ",", " ", 
+     RowBox[{"<|", 
+      RowBox[{"\"\<Input\>\"", " ", "->", " ", "x"}], "|>"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x_", ",", " ", "function_"}], "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"record", " ", "=", " ", 
+       RowBox[{"solutionRecord", "[", "x", "]"}]}], "}"}], ",", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{"FailureQ", "[", "record", "]"}], ",", " ", "record", ",", " ", 
+       RowBox[{"function", "[", "record", "]"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"index", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<index\>\"", "]"}], " ", "&"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"label", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<label\>\"", "]"}], " ", "&"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"indexForLabel", "[", "x_String", "]"}], " ", ":=", " ", 
+   RowBox[{"index", "[", "x", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"indexForLabel", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"Failure", "[", 
+    RowBox[{"\"\<BackgroundLabelMustBeString\>\"", ",", " ", 
+     RowBox[{"<|", 
+      RowBox[{"\"\<Input\>\"", " ", "->", " ", "x"}], "|>"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"AdSLength", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<L_AdS\>\"", "]"}], " ", "&"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"etaValue", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<eta\>\"", "]"}], " ", "&"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"supersymmetry", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<supersymmetry\>\"", "]"}], " ", "&"}]}], "]"}]}],
+   ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"globalSymmetry", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<global_symmetry\>\"", "]"}], " ", "&"}]}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"continuousSymmetryGroup", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", "\"\<global_symmetry\>\"", "]"}], 
+       "[", "\"\<group\>\"", "]"}], " ", "&"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"discreteSymmetryGroup", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"#", "[", "\"\<global_symmetry\>\"", "]"}], 
+       "[", "\"\<discrete_symmetry\>\"", "]"}], " ", "&"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"BFStable", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{
+      RowBox[{"#", "[", "\"\<BF stability\>\"", "]"}], " ", "&"}]}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"MassSpectrum", "[", 
+    RowBox[{"x_", ",", "sector_String"}], "]"}], ":=", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"Function", "[", 
+      RowBox[{"record", ",", 
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{"KeyExistsQ", "[", 
+          RowBox[{"spectrumDefinitions", ",", "sector"}], "]"}], ",", 
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"spectrum", "=", 
+             RowBox[{
+              RowBox[{"record", "[", "\"\<masses\>\"", "]"}], "[", "sector", 
+              "]"}]}], "}"}], ",", 
+           RowBox[{"<|", 
+            RowBox[{
+             RowBox[{"\"\<physical field count\>\"", "->", 
+              RowBox[{
+              "spectrum", "[", "\"\<physical_field_count\>\"", "]"}]}], ",", 
+             RowBox[{"\"\<Masses and multiplicities\>\"", "->", 
+              RowBox[{"Map", "[", 
+               RowBox[{
+                RowBox[{"Function", "[", 
+                 RowBox[{"level", ",", 
+                  RowBox[{"Join", "[", 
+                   RowBox[{"level", ",", 
+                    RowBox[{"<|", 
+                    RowBox[{"\"\<value\>\"", "->", 
+                    RowBox[{"Chop", "[", 
+                    RowBox[{
+                    RowBox[{"level", "[", "\"\<value\>\"", "]"}], ",", 
+                    RowBox[{"10", "^", 
+                    RowBox[{"-", "10"}]}]}], "]"}]}], "|>"}]}], "]"}]}], 
+                 "]"}], ",", 
+                RowBox[{"spectrum", "[", "\"\<levels\>\"", "]"}]}], "]"}]}]}],
+             "|>"}]}], "]"}], ",", 
+         RowBox[{"Failure", "[", 
+          RowBox[{"\"\<UnknownSpectrumSector\>\"", ",", 
+           RowBox[{"<|", 
+            RowBox[{"\"\<Sector\>\"", "->", "sector"}], "|>"}]}], "]"}]}], 
+        "]"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"MassSpectrum", "[", 
+    RowBox[{"x_", ",", "sector_"}], "]"}], ":=", 
+   RowBox[{"Failure", "[", 
+    RowBox[{"\"\<SpectrumSectorMustBeString\>\"", ",", 
+     RowBox[{"<|", 
+      RowBox[{"\"\<Sector\>\"", "->", "sector"}], "|>"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"massQuantities", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{"Function", "[", 
+      RowBox[{"record", ",", " ", 
+       RowBox[{"AssociationMap", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{"spectrumDefinitions", "[", "#", "]"}], 
+           "[", "\"\<mass_quantity\>\"", "]"}], " ", "&"}], ",", " ", 
+         "sectorNames"}], "]"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"BackgroundSummary", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", " ", 
+     RowBox[{"Function", "[", 
+      RowBox[{"record", ",", " ", 
+       RowBox[{"<|", 
+        RowBox[{
+         RowBox[{"\"\<Index\>\"", " ", "->", " ", 
+          RowBox[{"record", "[", "\"\<index\>\"", "]"}]}], ",", " ", 
+         RowBox[{"\"\<Label\>\"", " ", "->", " ", 
+          RowBox[{"record", "[", "\"\<label\>\"", "]"}]}], ",", " ", 
+         RowBox[{"\"\<g LAdS\>\"", " ", "->", " ", 
+          RowBox[{"record", "[", "\"\<L_AdS\>\"", "]"}]}], ",", 
+         RowBox[{"\"\<eta\>\"", " ", "->", " ", 
+          RowBox[{"record", "[", "\"\<eta\>\"", "]"}]}], ",", " ", 
+         RowBox[{"\"\<Continuous symmetry group\>\"", " ", "->", " ", 
+          RowBox[{
+           RowBox[{"record", "[", "\"\<global_symmetry\>\"", "]"}], 
+           "[", "\"\<group\>\"", "]"}]}], ",", 
+         RowBox[{"\"\<Discrete symmetry group\>\"", " ", "->", " ", 
+          RowBox[{
+           RowBox[{"record", "[", "\"\<global_symmetry\>\"", "]"}], 
+           "[", "\"\<discrete_symmetry\>\"", "]"}]}], ",", 
+         RowBox[{"\"\<SUSY\>\"", " ", "->", " ", 
+          RowBox[{
+           RowBox[{"record", "[", "\"\<supersymmetry\>\"", "]"}], 
+           "[", "\"\<N\>\"", "]"}]}], ",", " ", 
+         RowBox[{"\"\<BF stable\>\"", " ", "->", " ", 
+          RowBox[{"record", "[", "\"\<BF stability\>\"", "]"}]}]}], "|>"}]}], 
+      "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"BackgroundTableData", "[", "]"}], " ", ":=", " ", 
+   RowBox[{"BackgroundSummary", " ", "/@", " ", 
+    RowBox[{"Range", "[", "solutionCount", "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"ListBackgrounds", "[", 
+    RowBox[{"filter_", ":", "All"}], "]"}], ":=", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"rows", "=", 
+        RowBox[{"BackgroundTableData", "[", "]"}]}], ",", "headers"}], "}"}], 
+     ",", 
+     RowBox[{
+      RowBox[{"headers", "=", 
+       RowBox[{"Keys", "[", 
+        RowBox[{"First", "[", "rows", "]"}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"rows", "=", 
+       RowBox[{"Switch", "[", 
+        RowBox[{"filter", ",", "All", ",", "rows", ",", "\"\<SUSY\>\"", ",", 
+         RowBox[{"Select", "[", 
+          RowBox[{"rows", ",", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"#", "[", "\"\<SUSY\>\"", "]"}], ">", "0"}], "&"}]}], 
+          "]"}], ",", "\"\<BF_stable\>\"", ",", 
+         RowBox[{"Select", "[", 
+          RowBox[{"rows", ",", 
+           RowBox[{
+            RowBox[{"TrueQ", "[", 
+             RowBox[{"#", "[", "\"\<BF stable\>\"", "]"}], "]"}], "&"}]}], 
+          "]"}], ",", "_", ",", 
+         RowBox[{"Return", "[", 
+          RowBox[{"Failure", "[", 
+           RowBox[{"\"\<UnknownFilter\>\"", ",", 
+            RowBox[{"<|", 
+             RowBox[{"\"\<Filter\>\"", "->", "filter"}], "|>"}]}], "]"}], 
+          "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"Grid", "[", 
+       RowBox[{
+        RowBox[{"Prepend", "[", 
+         RowBox[{
+          RowBox[{"Values", "/@", "rows"}], ",", "headers"}], "]"}], ",", 
+        RowBox[{"Frame", "->", "All"}], ",", 
+        RowBox[{"Alignment", "->", "Left"}]}], "]"}]}]}], "]"}]}], 
+  ";"}]}], "Input",
+ InitializationCell->True,
+ CellChangeTimes->{{3.998963755581152*^9, 3.9989640000135784`*^9}, {
+   3.9989640342492485`*^9, 3.998964124225874*^9}, {3.998964156146591*^9, 
+   3.998964209724058*^9}, {3.9989645433345985`*^9, 3.998964544152397*^9}, {
+   3.9989650422581196`*^9, 3.998965045413637*^9}, 3.9989658542812786`*^9, 
+   3.998967090193367*^9, {3.998967263881668*^9, 3.9989672643780823`*^9}, {
+   3.998967298515053*^9, 3.998967317758396*^9}, {3.998969511922884*^9, 
+   3.9989695271636925`*^9}, {3.998982811119568*^9, 3.9989828180970135`*^9}},
+ CellLabel->
+  "In[180]:=",ExpressionUUID->"d78bf175-0613-3f46-a0c1-57db07a25974"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{
+   "modelData", ",", " ", "backgroundData", ",", " ", "backgroundValues", ",",
+     " ", "fields", ",", " ", "shapeFields", ",", " ", "fieldNames", ",", 
+    "\n", "shapeFieldNames", ",", " ", "readFormula", ",", " ", "V", ",", " ",
+     "h1", ",", " ", "h2m", ",", " ", "d", ",", " ", "k", ",", " ", "LAdS", ",",
+     " ", "eta", ",", " ", "parameterRules", ",", "\n", "etaOfFields", ",", 
+    " ", "radiusSquaredOfFields", ",", " ", "scalingEquationResiduals", ",", 
+    " ", "scalingEquations", ",", "\n", "backgroundEquations", ",", " ", 
+    "allEquationResiduals", ",", " ", "equationResidualsAt", ",", "\n", 
+    "GetBackground", ",", " ", "BackgroundRules", ",", " ", 
+    "BackgroundResidual", ",", " ", "CheckBackground", ",", " ", 
+    "CheckAllBackgrounds"}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"modelData", " ", "=", " ", 
+   RowBox[{"importData", "[", "\"\<model_22_scalars.json\>\"", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"backgroundData", " ", "=", " ", 
+   RowBox[{"importData", "[", "\"\<backgrounds_22_scalars.json\>\"", "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"AssociationQ", "[", "modelData", "]"}], " ", "&&", " ", 
+     RowBox[{"AssociationQ", "[", "backgroundData", "]"}]}], ",", 
+    " ", "\"\<BackgroundImportFailed\>\""}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"fieldNames", " ", "=", " ", 
+   RowBox[{"modelData", "[", "\"\<fields\>\"", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"Length", "[", "fieldNames", "]"}], " ", "===", " ", "22"}], 
+     " ", "&&", " ", 
+     RowBox[{"VectorQ", "[", 
+      RowBox[{"fieldNames", ",", " ", "StringQ"}], "]"}], " ", "&&", 
+     RowBox[{"DuplicateFreeQ", "[", "fieldNames", "]"}], " ", "&&", " ", 
+     RowBox[{
+      RowBox[{"First", "[", "fieldNames", "]"}], " ", "===", 
+      " ", "\"\<varphi\>\""}]}], ",", " ", "\"\<UnexpectedFieldBasis\>\""}], 
+   "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"shapeFieldNames", " ", "=", " ", 
+   RowBox[{"Rest", "[", "fieldNames", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"ListQ", "[", 
+      RowBox[{"backgroundData", "[", "\"\<solutions\>\"", "]"}], "]"}], " ", "&&", 
+     RowBox[{
+      RowBox[{"Lookup", "[", 
+       RowBox[{
+        RowBox[{"backgroundData", "[", "\"\<solutions\>\"", "]"}], ",", 
+        " ", "\"\<label\>\""}], "]"}], " ", "===", " ", "solutionLabels"}], 
+     " ", "&&", 
+     RowBox[{
+      RowBox[{"Lookup", "[", 
+       RowBox[{
+        RowBox[{"backgroundData", "[", "\"\<solutions\>\"", "]"}], ",", 
+        " ", "\"\<index\>\""}], "]"}], " ", "===", " ", "solutionIndices"}], 
+     " ", "&&", 
+     RowBox[{"And", " ", "@@", " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Length", "[", 
+           RowBox[{"#", "[", "\"\<values\>\"", "]"}], "]"}], " ", "===", " ", 
+          RowBox[{"Length", "[", "fieldNames", "]"}]}], " ", "&"}], " ", "/@",
+         " ", 
+        RowBox[{"backgroundData", "[", "\"\<solutions\>\"", "]"}]}], 
+       ")"}]}]}], ",", "\"\<BackgroundCatalogueMismatch\>\""}], "]"}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"backgroundValues", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"readNumber", " ", "/@", " ", 
+       RowBox[{"#", "[", "\"\<values\>\"", "]"}]}], " ", "&"}], ")"}], " ", "/@",
+     " ", 
+    RowBox[{"backgroundData", "[", "\"\<solutions\>\"", "]"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{"MatrixQ", "[", 
+     RowBox[{"backgroundValues", ",", " ", "finiteNumberQ"}], "]"}], ",", 
+    " ", "\"\<InvalidBackgroundValues\>\""}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"requireData", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"StringQ", "[", 
+      RowBox[{
+       RowBox[{"modelData", "[", "\"\<expressions\>\"", "]"}], 
+       "[", "\"\<V\>\"", "]"}], "]"}], " ", "&&", 
+     RowBox[{"StringQ", "[", 
+      RowBox[{
+       RowBox[{"modelData", "[", "\"\<expressions\>\"", "]"}], 
+       "[", "\"\<h1\>\"", "]"}], "]"}], " ", "&&", 
+     RowBox[{
+      RowBox[{"Sort", "[", 
+       RowBox[{"Keys", "[", 
+        RowBox[{
+         RowBox[{"modelData", "[", "\"\<expressions\>\"", "]"}], 
+         "[", "\"\<h2m\>\"", "]"}], "]"}], "]"}], " ", "===", " ", 
+      RowBox[{"Sort", "[", "shapeFieldNames", "]"}]}], " ", "&&", 
+     RowBox[{"VectorQ", "[", 
+      RowBox[{
+       RowBox[{"Values", "[", 
+        RowBox[{
+         RowBox[{"modelData", "[", "\"\<expressions\>\"", "]"}], 
+         "[", "\"\<h2m\>\"", "]"}], "]"}], ",", " ", "StringQ"}], "]"}]}], ",",
+     " ", "\"\<InvalidModelExpressions\>\""}], "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"ClearAll", "[", "\"\<ScalingBackgroundsFields`*\>\"", "]"}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"fields", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Symbol", "[", 
+      RowBox[{"\"\<ScalingBackgroundsFields`\>\"", " ", "<>", " ", "#"}], 
+      "]"}], " ", "&"}], " ", "/@", " ", "fieldNames"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"shapeFields", " ", "=", " ", 
+   RowBox[{"Rest", "[", "fields", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"readFormula", "[", "s_String", "]"}], " ", ":=", " ", 
+   RowBox[{"Block", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+       "$Context", " ", "=", " ", "\"\<ScalingBackgroundsFields`\>\""}], ",", 
+       " ", 
+       RowBox[{"$ContextPath", " ", "=", " ", 
+        RowBox[{"{", "\"\<System`\>\"", "}"}]}]}], "}"}], ",", 
+     RowBox[{"ToExpression", "[", 
+      RowBox[{"s", ",", " ", "InputForm"}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"V", " ", "=", " ", 
+   RowBox[{"readFormula", "[", 
+    RowBox[{
+     RowBox[{"modelData", "[", "\"\<expressions\>\"", "]"}], "[", "\"\<V\>\"",
+      "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"h1", " ", "=", " ", 
+   RowBox[{"readFormula", "[", 
+    RowBox[{
+     RowBox[{"modelData", "[", "\"\<expressions\>\"", "]"}], "[", "\"\<h1\>\"",
+      "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"h2m", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"readFormula", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"modelData", "[", "\"\<expressions\>\"", "]"}], 
+        "[", "\"\<h2m\>\"", "]"}], "[", "#", "]"}], "]"}], " ", "&"}], " ", "/@",
+     " ", "shapeFieldNames"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"d", " ", "=", " ", "3"}], ";", " ", 
+  RowBox[{"k", " ", "=", " ", 
+   RowBox[{"-", "1"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"parameterRules", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"Symbol", "[", "\"\<ScalingBackgroundsFields`g\>\"", "]"}], " ", 
+     "->", " ", "1"}], "}"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"scalingEquationResiduals", " ", "=", " ", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"LAdS", "^", "2"}], " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"D", "[", 
+         RowBox[{"V", ",", " ", "#"}], "]"}], " ", "&"}], " ", "/@", " ", 
+       "shapeFields"}], ")"}]}], "-", " ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"eta", "^", "2"}], "/", 
+      RowBox[{"(", 
+       RowBox[{"2", " ", 
+        RowBox[{"k", "^", "2"}]}], ")"}]}], " ", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"D", "[", 
+         RowBox[{"h1", ",", " ", "#"}], "]"}], " ", "&"}], " ", "/@", " ", 
+       "shapeFields"}], ")"}]}], " ", "+", " ", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{"eta", "/", "k"}], ")"}], " ", 
+     RowBox[{"(", 
+      RowBox[{"d", " ", "+", " ", "eta"}], ")"}], " ", "h2m"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"scalingEquations", " ", "=", " ", 
+   RowBox[{"Thread", "[", 
+    RowBox[{"scalingEquationResiduals", " ", "==", " ", "0"}], "]"}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"etaOfFields", " ", "=", " ", 
+   RowBox[{"2", " ", 
+    RowBox[{
+     RowBox[{"k", "^", "2"}], "/", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"2", " ", 
+        RowBox[{"k", "^", "2"}]}], " ", "+", " ", "h1"}], ")"}]}]}]}], 
+  ";"}], "\n", 
+ RowBox[{
+  RowBox[{"radiusSquaredOfFields", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"2", " ", 
+         RowBox[{"(", 
+          RowBox[{"d", " ", "+", " ", "1"}], ")"}], " ", 
+         RowBox[{"k", "^", "2"}]}], " ", "+", " ", 
+        RowBox[{"d", " ", "h1"}]}], ")"}], " ", 
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"2", " ", "d", " ", 
+         RowBox[{"k", "^", "2"}]}], " ", "+", " ", 
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{"d", " ", "-", " ", "1"}], ")"}], " ", "h1"}]}], ")"}]}], 
+     ")"}], " ", "/", 
+    RowBox[{"(", 
+     RowBox[{"V", " ", 
+      RowBox[{
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"2", " ", 
+          RowBox[{"k", "^", "2"}]}], " ", "+", " ", "h1"}], ")"}], "^", 
+       "2"}]}], ")"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"backgroundEquations", " ", "=", " ", 
+   RowBox[{"scalingEquations", " ", "/.", " ", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"eta", " ", "->", " ", "etaOfFields"}], ",", " ", 
+      RowBox[{
+       RowBox[{"LAdS", "^", "2"}], " ", "->", " ", 
+       "radiusSquaredOfFields"}]}], "}"}]}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"allEquationResiduals", " ", "=", " ", 
+   RowBox[{"Join", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"eta", " ", "-", " ", "etaOfFields"}], ",", " ", 
+       RowBox[{
+        RowBox[{"LAdS", "^", "2"}], " ", "-", " ", 
+        "radiusSquaredOfFields"}]}], "}"}], ",", " ", 
+     "scalingEquationResiduals"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"GetBackground", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"withSolution", "[", 
+    RowBox[{"x", ",", 
+     RowBox[{
+      RowBox[{"Chop", "[", 
+       RowBox[{"backgroundValues", "[", 
+        RowBox[{"[", 
+         RowBox[{"#", "[", "\"\<index\>\"", "]"}], "]"}], "]"}], "]"}], " ", 
+      "&"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"BackgroundRules", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"values", " ", "=", " ", 
+       RowBox[{"GetBackground", "[", "x", "]"}]}], "}"}], ",", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{"FailureQ", "[", "values", "]"}], ",", " ", "values", ",", " ", 
+       RowBox[{"Thread", "[", 
+        RowBox[{"fields", " ", "->", " ", "values"}], "]"}]}], "]"}]}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"equationResidualsAt", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"rules", " ", "=", " ", 
+        RowBox[{"BackgroundRules", "[", "x", "]"}]}], ",", " ", "result"}], 
+      "}"}], ",", 
+     RowBox[{
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"FailureQ", "[", "rules", "]"}], ",", " ", 
+        RowBox[{"Return", "[", "rules", "]"}]}], "]"}], ";", "\n", "  ", 
+      RowBox[{"result", " ", "=", " ", 
+       RowBox[{"Quiet", "[", 
+        RowBox[{"N", "[", 
+         RowBox[{
+          RowBox[{"allEquationResiduals", " ", "/.", " ", 
+           RowBox[{"Join", "[", 
+            RowBox[{"rules", ",", " ", "parameterRules", ",", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"LAdS", " ", "->", " ", 
+                RowBox[{"AdSLength", "[", "x", "]"}]}], ",", " ", 
+               RowBox[{"eta", " ", "->", " ", 
+                RowBox[{"etaValue", "[", "x", "]"}]}]}], "}"}]}], "]"}]}], ",",
+           " ", "MachinePrecision"}], "]"}], "]"}]}], ";", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"VectorQ", "[", 
+          RowBox[{"result", ",", " ", "finiteNumberQ"}], "]"}], " ", "&&", 
+         " ", 
+         RowBox[{
+          RowBox[{"Length", "[", "result", "]"}], " ", "===", " ", "23"}]}], ",",
+         " ", "result", ",", 
+        RowBox[{"Failure", "[", 
+         RowBox[{"\"\<BackgroundResidualEvaluationFailed\>\"", ",", " ", 
+          RowBox[{"<|", 
+           RowBox[{"\"\<Background\>\"", " ", "->", " ", "x"}], "|>"}]}], 
+         "]"}]}], "]"}]}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"BackgroundResidual", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"result", " ", "=", " ", 
+       RowBox[{"equationResidualsAt", "[", "x", "]"}]}], "}"}], ",", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{"FailureQ", "[", "result", "]"}], ",", " ", "result", ",", " ", 
+       RowBox[{"Drop", "[", 
+        RowBox[{"result", ",", " ", "2"}], "]"}]}], "]"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"CheckBackground", "[", "x_", "]"}], " ", ":=", " ", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"result", " ", "=", " ", 
+        RowBox[{"equationResidualsAt", "[", "x", "]"}]}], ",", " ", 
+       "maximum"}], "}"}], ",", 
+     RowBox[{
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"FailureQ", "[", "result", "]"}], ",", " ", 
+        RowBox[{"Return", "[", "result", "]"}]}], "]"}], ";", "\n", "  ", 
+      RowBox[{"maximum", " ", "=", " ", 
+       RowBox[{"Max", "[", 
+        RowBox[{"Abs", "[", "result", "]"}], "]"}]}], ";", 
+      RowBox[{"{", 
+       RowBox[{"maximum", ",", " ", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{"maximum", " ", "<", " ", 
+           RowBox[{"10", "^", 
+            RowBox[{"-", "10"}]}]}], ",", " ", "\"\<Below treshold\>\"", ",", 
+          " ", "\"\<Above or equal to treshold\>\""}], "]"}]}], "}"}]}]}], 
+    "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"CheckAllBackgrounds", "[", "]"}], " ", ":=", 
+   RowBox[{"Grid", "[", 
+    RowBox[{
+     RowBox[{"Prepend", "[", 
+      RowBox[{
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{"With", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"result", " ", "=", " ", 
+             RowBox[{"CheckBackground", "[", "j", "]"}]}], "}"}], ",", 
+           RowBox[{"If", "[", 
+            RowBox[{
+             RowBox[{"FailureQ", "[", "result", "]"}], ",", " ", 
+             RowBox[{"{", 
+              RowBox[{"j", ",", " ", 
+               RowBox[{"label", "[", "j", "]"}], ",", " ", "result", ",", 
+               " ", "\"\<Evaluation failed\>\""}], "}"}], ",", " ", 
+             RowBox[{"Join", "[", 
+              RowBox[{
+               RowBox[{"{", 
+                RowBox[{"j", ",", " ", 
+                 RowBox[{"label", "[", "j", "]"}]}], "}"}], ",", " ", 
+               "result"}], "]"}]}], "]"}]}], "]"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"j", ",", " ", "solutionCount"}], "}"}]}], "]"}], ",", " ", 
+       RowBox[{"{", 
+        RowBox[{"\"\<Index\>\"", ",", " ", "\"\<Label\>\"", ",", 
+         " ", "\"\<Maximum residual\>\"", ",", " ", "\"\<Check\>\""}], 
+        "}"}]}], "]"}], ",", " ", 
+     RowBox[{"Frame", " ", "->", " ", "All"}]}], "]"}]}], ";"}], "\n", 
+ RowBox[{"<|", 
+  RowBox[{
+   RowBox[{"\"\<Backgrounds\>\"", " ", "->", " ", "solutionCount"}], ",", " ", 
+   RowBox[{"\"\<Fields\>\"", " ", "->", " ", 
+    RowBox[{"Length", "[", "fields", "]"}]}]}], "|>"}]}], "Input",
+ InitializationCell->True,
+ CellChangeTimes->{{3.998963755581152*^9, 3.9989640000135784`*^9}, {
+   3.9989640342492485`*^9, 3.998964124225874*^9}, {3.998964156146591*^9, 
+   3.998964175846796*^9}, {3.9989642209786625`*^9, 3.9989643510319424`*^9}, 
+   3.9989651327907906`*^9, {3.9989660911500473`*^9, 3.9989660955825787`*^9}, {
+   3.9989665504304676`*^9, 3.998966584017723*^9}},
+ CellLabel->
+  "In[226]:=",ExpressionUUID->"336603b3-4a14-db4e-9080-2033b1eaf860"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"Backgrounds\"\>", "\[Rule]", "78"}], ",", 
+   RowBox[{"\<\"Fields\"\>", "\[Rule]", "22"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{
+  3.998964353905592*^9, 3.998965885130806*^9, 3.9989660986300316`*^9, {
+   3.9989665576442013`*^9, 3.9989665857034054`*^9}, 3.9989671008260174`*^9, 
+   3.9989695447475624`*^9, {3.9989823476939335`*^9, 3.9989823557294617`*^9}, 
+   3.998982848426159*^9},
+ CellLabel->
+  "Out[258]=",ExpressionUUID->"d0eb4aaa-157c-014c-aaae-c7d2046bca71"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Examples", "Section",
+ CellChangeTimes->{
+  3.9989659272741203`*^9},ExpressionUUID->"30130a7d-f580-ec47-af0d-\
+59eb7983280c"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"BackgroundSummary", "[", "\"\<Z666666\>\"", "]"}], 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Summary", " ", "of", " ", "the", " ", "key", " ", "data", " ", 
+    "associated", " ", "to", " ", "a", " ", "chosen", " ", "background"}], 
+   " ", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"BackgroundSummary", "[", "1", "]"}], ";"}], " ", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "all", " ", "functions", " ", "take", " ", "both", " ", "label", " ", 
+    "and", " ", "index"}], " ", "*)"}]}]}], "Input",
+ CellChangeTimes->{{3.998965949333599*^9, 3.998966017215214*^9}, {
+  3.9989662978970222`*^9, 3.9989662989574776`*^9}},
+ CellLabel->
+  "In[259]:=",ExpressionUUID->"9ae07e14-5d3f-844e-a4ba-81938db374d8"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"Index\"\>", "\[Rule]", "1"}], ",", 
+   RowBox[{"\<\"Label\"\>", "\[Rule]", "\<\"Z666666\"\>"}], ",", 
+   RowBox[{"\<\"g LAdS\"\>", "\[Rule]", "0.6666666666666666`"}], ",", 
+   RowBox[{"\<\"eta\"\>", "\[Rule]", "0.3333333333333333`"}], ",", 
+   RowBox[{"\<\"Continuous symmetry group\"\>", "\[Rule]", "\<\"SO(7)\"\>"}], 
+   ",", 
+   RowBox[{"\<\"Discrete symmetry group\"\>", 
+    "\[Rule]", "\<\"None found\"\>"}], ",", 
+   RowBox[{"\<\"SUSY\"\>", "\[Rule]", "8"}], ",", 
+   RowBox[{"\<\"BF stable\"\>", "\[Rule]", "True"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{3.9989823557771626`*^9, 3.9989826930800686`*^9, 
+  3.99898287007197*^9},
+ CellLabel->
+  "Out[259]=",ExpressionUUID->"7c35721f-8a31-4c4f-b694-f58b856148fc"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"SymbolName", "/@", "fields"}], " ", 
+  RowBox[{"(*", " ", 
+   RowBox[{"the", " ", "22", " ", "scalar", " ", "fields"}], " ", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"GetBackground", "[", "\"\<Z666666\>\"", "]"}], " ", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{
+    "values", " ", "of", " ", "the", " ", "scalar", " ", "fields", " ", "in", 
+     " ", "given", " ", 
+     RowBox[{"background", ".", " ", "The"}], " ", "first", " ", "entry", " ",
+      "is", " ", "the", " ", "running", " ", "dilaton"}], ",", " ", 
+    RowBox[{
+    "the", " ", "zero", " ", "is", " ", "its", " ", "value", " ", "on", " ", 
+     "the", " ", "chosen", " ", "radial", " ", "reference", " ", 
+     RowBox[{"slice", ".", " ", "All"}], " ", "other", " ", "scalars", " ", 
+     "do", " ", "not", " ", 
+     RowBox[{"run", "."}]}]}], " ", "*)"}]}]}], "Input",
+ CellChangeTimes->{{3.9989662645138187`*^9, 3.998966433819584*^9}},
+ CellLabel->
+  "In[261]:=",ExpressionUUID->"e24f3983-0162-584f-9d44-5f8a7a04d45b"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"\<\"varphi\"\>", ",", "\<\"X1\"\>", ",", "\<\"X2\"\>", 
+   ",", "\<\"X3\"\>", ",", "\<\"X4\"\>", ",", "\<\"X5\"\>", ",", "\<\"X6\"\>",
+    ",", "\<\"Chi1\"\>", ",", "\<\"Chi2\"\>", ",", "\<\"Chi3\"\>", 
+   ",", "\<\"Chi4\"\>", ",", "\<\"Chi5\"\>", ",", "\<\"Chi6\"\>", 
+   ",", "\<\"Chi7\"\>", ",", "\<\"Chi8\"\>", ",", "\<\"Chi9\"\>", 
+   ",", "\<\"Chi10\"\>", ",", "\<\"Chi11\"\>", ",", "\<\"Chi12\"\>", 
+   ",", "\<\"Chi13\"\>", ",", "\<\"Chi14\"\>", ",", "\<\"Chi15\"\>"}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.9989644288771973`*^9, 3.998965713447567*^9, 
+  3.998966101335579*^9, 3.998966438490032*^9, 3.9989665908971806`*^9, 
+  3.998967286871704*^9, 3.9989695524576073`*^9, 3.998982369250004*^9, 
+  3.9989826939316216`*^9, 3.9989828711359463`*^9},
+ CellLabel->
+  "Out[261]=",ExpressionUUID->"552cab16-84fa-904d-b2ae-cc039a1ec12f"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+  "0", ",", "1.`", ",", "1.`", ",", "1.`", ",", "1.`", ",", "1.`", ",", "1.`",
+    ",", "0", ",", "0", ",", "0", ",", "0", ",", "0", ",", "0", ",", "0", ",",
+    "0", ",", "0", ",", "0", ",", "0", ",", "0", ",", "0", ",", "0", ",", 
+   "0"}], "}"}]], "Output",
+ CellChangeTimes->{3.9989644288771973`*^9, 3.998965713447567*^9, 
+  3.998966101335579*^9, 3.998966438490032*^9, 3.9989665908971806`*^9, 
+  3.998967286871704*^9, 3.9989695524576073`*^9, 3.998982369250004*^9, 
+  3.9989826939316216`*^9, 3.9989828711359463`*^9},
+ CellLabel->
+  "Out[262]=",ExpressionUUID->"10db3359-6573-4148-b854-966a588513cb"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"MassSpectrum", "[", 
+   RowBox[{"\"\<Z666666\>\"", ",", " ", "\"\<scalars\>\""}], "]"}], 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Displays", " ", "the", " ", "number", " ", "of", " ", "physical", " ", 
+    "fields", " ", "and", " ", "their", " ", "masses", " ", "and", " ", 
+    "multiplicities", " ", "in", " ", "the", " ", "chosen", " ", "sector", " ",
+     "for", " ", "a", " ", "chosen", " ", 
+    RowBox[{"background", ".", " ", "\[IndentingNewLine]", "sectors"}], " ", 
+    "\[Epsilon]", " ", 
+    RowBox[{"{", 
+     RowBox[{"\"\<scalars\>\"", ",", " ", "\"\<spin_one_half\>\"", ",", 
+      " ", "\"\<vectors\>\"", ",", " ", "\"\<spin_three_halves\>\"", ",", 
+      " ", "\"\<spin_two\>\""}], "}"}]}], " ", "*)"}]}]], "Input",
+ CellChangeTimes->{{3.9989666958517303`*^9, 3.9989667606216984`*^9}, {
+  3.998969568981283*^9, 3.998969596527504*^9}},
+ CellLabel->
+  "In[263]:=",ExpressionUUID->"2d572912-32e7-c545-83bc-78b26ac39dd8"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"physical field count\"\>", "\[Rule]", "63"}], ",", 
+   RowBox[{"\<\"Masses and multiplicities\"\>", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"\[LeftAssociation]", 
+       RowBox[{
+        RowBox[{"\<\"value\"\>", "\[Rule]", 
+         RowBox[{"-", "2.666666666666668`"}]}], ",", 
+        RowBox[{"\<\"multiplicity\"\>", "\[Rule]", "27"}]}], 
+       "\[RightAssociation]"}], ",", 
+      RowBox[{"\[LeftAssociation]", 
+       RowBox[{
+        RowBox[{"\<\"value\"\>", "\[Rule]", 
+         RowBox[{"-", "2.333333333333334`"}]}], ",", 
+        RowBox[{"\<\"multiplicity\"\>", "\[Rule]", "35"}]}], 
+       "\[RightAssociation]"}], ",", 
+      RowBox[{"\[LeftAssociation]", 
+       RowBox[{
+        RowBox[{"\<\"value\"\>", "\[Rule]", "0"}], ",", 
+        RowBox[{"\<\"multiplicity\"\>", "\[Rule]", "1"}]}], 
+       "\[RightAssociation]"}]}], "}"}]}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{
+  3.9989644400750313`*^9, 3.998965096630518*^9, {3.9989656976250343`*^9, 
+   3.998965714754751*^9}, 3.9989658345438023`*^9, 3.998966593302143*^9, 
+   3.998966766022768*^9, 3.998967286932379*^9, {3.9989695537578316`*^9, 
+   3.9989695662900887`*^9}, 3.9989695998261623`*^9, 3.9989823716256924`*^9, 
+   3.99898269471587*^9, 3.998982872356678*^9},
+ CellLabel->
+  "Out[263]=",ExpressionUUID->"cfb863a4-e7f5-7847-bb6b-e83015754b28"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"CheckBackground", "[", "5", "]"}], 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Checks", " ", "that", " ", "chosen", " ", "background", " ", "solves", " ",
+     "equation", " ", 
+    RowBox[{"(", "5", ")"}], " ", "of", " ", "the", " ", "manuscript"}], " ", 
+   "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"CheckAllBackgrounds", "[", "]"}], ";"}], 
+   RowBox[{"(*", " ", 
+    RowBox[{"Checks", " ", "all", " ", "backgrounds", " ", "simultaneously"}],
+     "*)"}], "*)"}]}]}], "Input",
+ CellChangeTimes->{{3.9989666394151955`*^9, 3.9989666928927402`*^9}, {
+  3.99896680728088*^9, 3.998966807456129*^9}},
+ CellLabel->
+  "In[264]:=",ExpressionUUID->"e9db9edf-8e9b-eb4c-9b78-78ffacdbbbae"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"1.554312234475219`*^-14", ",", "\<\"Below treshold\"\>"}], 
+  "}"}]], "Output",
+ CellChangeTimes->{3.9989668083944473`*^9, 3.9989672870999413`*^9, 
+  3.9989696008304253`*^9, 3.9989823733985825`*^9, 3.998982695556757*^9, 
+  3.9989828737936325`*^9},
+ CellLabel->
+  "Out[264]=",ExpressionUUID->"b146c4f0-3ef1-684d-aa62-355d4fdc2708"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"globalSymmetry", "[", "3", "]"}], " ", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Displays", " ", "all", " ", "global", " ", "symmetry", " ", "data", " ", 
+    "for", " ", "a", " ", "chosen", " ", "background"}], " ", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"continuousSymmetryGroup", "[", "3", "]"}], " ", 
+  RowBox[{"(*", " ", 
+   RowBox[{"Displays", " ", "continuous", " ", "global", " ", "symmetry"}], 
+   " ", "*)"}]}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"discreteSymmetryGroup", "[", "3", "]"}], 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Displays", " ", "identified", " ", "discrete", " ", "global", " ", 
+    "symmetry"}], " ", "*)"}]}]}], "Input",
+ CellChangeTimes->{{3.998982397642359*^9, 3.99898240383305*^9}, {
+  3.9989827241590347`*^9, 3.9989828013221893`*^9}, {3.9989828324313374`*^9, 
+  3.998982833819666*^9}, {3.9989828811987247`*^9, 3.9989829162282257`*^9}},
+ CellLabel->
+  "In[271]:=",ExpressionUUID->"f4099bfb-3e5c-914a-8042-e6f88c2f09d4"],
+
+Cell[BoxData[
+ RowBox[{"\[LeftAssociation]", 
+  RowBox[{
+   RowBox[{"\<\"group\"\>", "\[Rule]", "\<\"SU(3)\"\>"}], ",", 
+   RowBox[{"\<\"lie_algebra\"\>", "\[Rule]", "\<\"su(3)\"\>"}], ",", 
+   RowBox[{"\<\"lie_algebra_dimension\"\>", "\[Rule]", "8"}], ",", 
+   RowBox[{"\<\"discrete_symmetry\"\>", "\[Rule]", "\<\"Z2\"\>"}]}], 
+  "\[RightAssociation]"}]], "Output",
+ CellChangeTimes->{
+  3.998982404390545*^9, 3.9989826962103653`*^9, 3.998982751521147*^9, {
+   3.9989828749480743`*^9, 3.9989828836827774`*^9}, 3.998982917781519*^9},
+ CellLabel->
+  "Out[271]=",ExpressionUUID->"b8627c1f-e65b-9c46-a7ed-d1f22824db34"],
+
+Cell[BoxData["\<\"SU(3)\"\>"], "Output",
+ CellChangeTimes->{
+  3.998982404390545*^9, 3.9989826962103653`*^9, 3.998982751521147*^9, {
+   3.9989828749480743`*^9, 3.9989828836827774`*^9}, 3.9989829177990513`*^9},
+ CellLabel->
+  "Out[272]=",ExpressionUUID->"62190eaf-3f3a-794e-821a-ec955b3fa623"],
+
+Cell[BoxData["\<\"Z2\"\>"], "Output",
+ CellChangeTimes->{
+  3.998982404390545*^9, 3.9989826962103653`*^9, 3.998982751521147*^9, {
+   3.9989828749480743`*^9, 3.9989828836827774`*^9}, 3.9989829177990513`*^9},
+ CellLabel->
+  "Out[273]=",ExpressionUUID->"3cdd0985-1880-e04e-9a67-8bdd6a2cd373"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ListBackgrounds", "[", "]"}], 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Summary", " ", "of", " ", "key", " ", "quantities", " ", "for", " ", 
+    "all", " ", "discovered", " ", "backgrounds"}], " ", "*)"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"ListBackgrounds", "[", "\"\<SUSY\>\"", "]"}], 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Summary", " ", "of", " ", "key", " ", "quantities", " ", "for", " ", 
+    "all", " ", "discovered", " ", "SUSY", " ", "backgrounds"}], " ", "*)"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"ListBackgrounds", "[", "\"\<BF_stable\>\"", "]"}], 
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Summary", " ", "of", " ", "key", " ", "quantities", " ", "for", " ", 
+    "all", " ", "discovered", " ", "BF", " ", "stable", " ", "backgrounds"}], 
+   " ", "*)"}]}]}], "Input",
+ CellChangeTimes->{{3.998966874840704*^9, 3.9989668956763477`*^9}, {
+  3.9989671087296906`*^9, 3.998967157093895*^9}},
+ CellLabel->
+  "In[274]:=",ExpressionUUID->"7a826f3f-1142-6a42-8f5e-09c92017ffed"],
+
+Cell[BoxData[
+ TagBox[GridBox[{
+    {"\<\"Index\"\>", "\<\"Label\"\>", "\<\"g LAdS\"\>", "\<\"eta\"\>", \
+"\<\"Continuous symmetry group\"\>", "\<\"Discrete symmetry group\"\>", \
+"\<\"SUSY\"\>", "\<\"BF stable\"\>"},
+    {"1", "\<\"Z666666\"\>", "0.6666666666666666`", 
+     "0.3333333333333333`", "\<\"SO(7)\"\>", "\<\"None found\"\>", "8", 
+     "True"},
+    {"3", "\<\"Z597968\"\>", "0.5979686981704028`", 
+     "0.2754418600281966`", "\<\"SU(3)\"\>", "\<\"Z2\"\>", "1", "True"},
+    {"4", "\<\"Z596827\"\>", "0.5968279826236427`", 
+     "0.2655644370746374`", "\<\"G2\"\>", "\<\"None found\"\>", "0", "True"},
+    {"6", "\<\"Z570472\"\>", "0.5704723516767396`", 
+     "0.2573339575529217`", "\<\"U(2)\"\>", "\<\"Z2\"\>", "2", "True"},
+    {"41", "\<\"Z448357\"\>", "0.4483573825664941`", 
+     "0.16495999915405732`", "\<\"U(1)\"\>", "\<\"(Z2)^2\"\>", "1", "True"},
+    {"54", "\<\"Z394258\"\>", "0.3942582291899537`", 
+     "0.14339279548168604`", "\<\"U(1)\"\>", "\<\"(Z2)^2\"\>", "1", "True"}
+   },
+   AutoDelete->False,
+   GridBoxAlignment->{"Columns" -> {{Left}}},
+   GridBoxFrame->{"Columns" -> {{True}}, "Rows" -> {{True}}},
+   GridBoxItemSize->{"Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+  "Grid"]], "Output",
+ CellChangeTimes->{3.9989823763279667`*^9, 3.9989826969512367`*^9, 
+  3.9989829206880894`*^9},
+ CellLabel->
+  "Out[276]=",ExpressionUUID->"bb4eae88-aa9a-084d-b747-bdb232cb82ad"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+Saveable->True,
+WindowSize->{1288.5, 999.75},
+WindowMargins->{{Automatic, -2580}, {159, Automatic}},
+WindowTitle->"Scaling backgrounds: compact spectra",
+FrontEndVersion->"15.0 for Microsoft Windows (64-bit) (July 2, 2026)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"f8688304-eb0e-124d-bad0-88eb6d3e0ccd"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[626, 23, 129, 0, 96, "Title",ExpressionUUID->"1d9bf42c-3a83-b641-9e87-37f0b277ca73"],
+Cell[758, 25, 3740, 64, 825, "Abstract",ExpressionUUID->"df26af14-08c8-47df-a845-cf5cfc971f16"],
+Cell[CellGroupData[{
+Cell[4523, 93, 322, 6, 66, "Section",ExpressionUUID->"7298ba20-eb47-b342-bf83-a99ab2a1dee9"],
+Cell[4848, 101, 292, 6, 33, "Text",ExpressionUUID->"e95ee4a4-0352-024b-8516-65306890a898"],
+Cell[5143, 109, 24636, 634, 1414, "Input",ExpressionUUID->"d78bf175-0613-3f46-a0c1-57db07a25974",
+ InitializationCell->True],
+Cell[CellGroupData[{
+Cell[29804, 747, 15748, 425, 70, "Input",ExpressionUUID->"336603b3-4a14-db4e-9080-2033b1eaf860",
+ InitializationCell->True],
+Cell[45555, 1174, 560, 12, 70, "Output",ExpressionUUID->"d0eb4aaa-157c-014c-aaae-c7d2046bca71"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[46164, 1192, 131, 3, 70, "Section",ExpressionUUID->"30130a7d-f580-ec47-af0d-59eb7983280c"],
+Cell[CellGroupData[{
+Cell[46320, 1199, 753, 18, 70, "Input",ExpressionUUID->"9ae07e14-5d3f-844e-a4ba-81938db374d8"],
+Cell[47076, 1219, 813, 17, 70, "Output",ExpressionUUID->"7c35721f-8a31-4c4f-b694-f58b856148fc"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[47926, 1241, 1038, 22, 70, "Input",ExpressionUUID->"e24f3983-0162-584f-9d44-5f8a7a04d45b"],
+Cell[48967, 1265, 880, 15, 70, "Output",ExpressionUUID->"552cab16-84fa-904d-b2ae-cc039a1ec12f"],
+Cell[49850, 1282, 642, 12, 70, "Output",ExpressionUUID->"10db3359-6573-4148-b854-966a588513cb"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[50529, 1299, 967, 19, 70, "Input",ExpressionUUID->"2d572912-32e7-c545-83bc-78b26ac39dd8"],
+Cell[51499, 1320, 1422, 32, 70, "Output",ExpressionUUID->"cfb863a4-e7f5-7847-bb6b-e83015754b28"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[52958, 1357, 755, 19, 70, "Input",ExpressionUUID->"e9db9edf-8e9b-eb4c-9b78-78ffacdbbbae"],
+Cell[53716, 1378, 370, 8, 70, "Output",ExpressionUUID->"b146c4f0-3ef1-684d-aa62-355d4fdc2708"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[54123, 1391, 1009, 22, 70, "Input",ExpressionUUID->"f4099bfb-3e5c-914a-8042-e6f88c2f09d4"],
+Cell[55135, 1415, 616, 12, 70, "Output",ExpressionUUID->"b8627c1f-e65b-9c46-a7ed-d1f22824db34"],
+Cell[55754, 1429, 292, 5, 70, "Output",ExpressionUUID->"62190eaf-3f3a-794e-821a-ec955b3fa623"],
+Cell[56049, 1436, 289, 5, 70, "Output",ExpressionUUID->"3cdd0985-1880-e04e-9a67-8bdd6a2cd373"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[56375, 1446, 1049, 24, 70, "Input",ExpressionUUID->"7a826f3f-1142-6a42-8f5e-09c92017ffed"],
+Cell[57427, 1472, 1412, 27, 70, "Output",ExpressionUUID->"bb4eae88-aa9a-084d-b747-bdb232cb82ad"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+
