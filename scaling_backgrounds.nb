@@ -1,23 +1,7 @@
 (* Content-type: application/vnd.wolfram.mathematica *)
 
-(*** Wolfram Notebook File ***)
-(* http://www.wolfram.com/nb *)
+(* CreatedBy='Wolfram 15.0'; byte-position caches omitted after convention update. *)
 
-(* CreatedBy='Wolfram 15.0' *)
-
-(*CacheID: 234*)
-(* Internal cache information:
-NotebookFileLineBreakTest
-NotebookFileLineBreakTest
-NotebookDataPosition[       154,          7]
-NotebookDataLength[     61818,       1564]
-NotebookOptionsPosition[     58879,       1504]
-NotebookOutlinePosition[     59355,       1522]
-CellTagsIndexPosition[     59312,       1519]
-WindowTitle->Scaling backgrounds: compact spectra
-WindowFrame->Normal*)
-
-(* Beginning of Notebook Content *)
 Notebook[{
 
 Cell[CellGroupData[{
@@ -25,7 +9,7 @@ Cell["Scaling backgrounds: spectra and reproducible backgrounds", "Title",Expres
 
 Cell["\<\
 Warning: Keep this notebook beside its three data JSON files. Evaluate the \
-single Initialization cell to import all data and define every function. 
+two initialisation cells, in order, to import all data and define every function. 
 
 The notebook imports the following files:
 - scaling_backgrounds.json supplies the catalogue, supersymmetry, symmetry, g \
@@ -39,17 +23,18 @@ an Index running from 1 to 78 in descending order of g L_AdS. Each background \
 has an additional label Zxxxxxx using the first six digits after the decimal \
 point in the numeric value of g L_AdS, without rounding.
 
-The JSON field L_AdS stores g L_AdS from Eq. (5), evaluated at g=1. For d=3 \
-and k=-1. The catalogue, background values, labels and equations all use the \
+The JSON field L_AdS stores g L_AdS from Eq. (6), evaluated at g=1. For d=3 \
+and k=-2. The catalogue, background values, labels and equations all use the \
 same scalar frame.
 
+The running scalar obeys varphi_new=varphi_previous/2. In the supplied JSON, \
+h1 is already multiplied by 4 and every h2m by 2; import them directly. The profile is \
+varphi(r)=-eta r/(2 L_AdS), or varphi(z)=(eta/2) log(z/L_AdS), with \
+z=L_AdS exp(-r/L_AdS). The reference slice varphi=0, eta, g L_AdS and \
+mass spectra are unchanged. At the SO(7)/D2 point, h1=16 gives eta=1/3.
+
 Definitions (all functions accept an index or label):
-- fields lists all 22 scalars. \[LineSeparator]- scalingEquations defines the \
-third line of Eq. (5), with d=3 and k=-1, differentiated with respect to the \
-21 shape fields.
-- backgroundEquations eliminates eta and LAdS using the first two lines. The \
-running varphi is included in fields and is set to zero in the tabulated \
-reference slice. 
+- fields lists all 22 scalars. 
 - GetBackground[x] returns their numerical values in fields order. 
 - ListBackgrounds[] displays Index, Label, g LAdS, eta, Continuous symmetry \
 group, Discrete symmetry group, SUSY and BF stable for all backgrounds. \
@@ -60,6 +45,11 @@ relevant subset of backgrounds.
 label.\[LineSeparator]- label[i] returns the label for that index.
 - AdSLength[i], etaValue[i], supersymmetry[i] and globalSymmetry[i] read the \
 corresponding catalogue quantities.
+- scalingEquations defines the third line of Eq. (6), with d=3 and k=-2, \
+differentiated with respect to the 21 shape fields.
+- backgroundEquations eliminates eta and LAdS using the first two lines. The \
+running varphi is included in fields and is set to zero in the tabulated \
+reference slice. 
 - BackgroundRules[x] gives field substitutions.
 - BFStable[x] returns a Boolean; \[LineSeparator]- continuousSymmetryGroup[x] \
 returns the continuous group name; \[LineSeparator]- discreteSymmetryGroup[x] \
@@ -73,7 +63,7 @@ and M L for fermionic fluctuations.
 backgrounds.
 - BackgroundResidual[x] returns the 21 shape-equation residuals. \
 \[LineSeparator]- CheckBackground[x] also checks the first two lines of Eq. \
-(5), returning the largest absolute residual and Below threshold only when it \
+(6), returning the largest absolute residual and Below threshold only when it \
 is strictly below 10^-10. \[LineSeparator]- CheckAllBackgrounds[] displays \
 these checks for all backgrounds.
 
@@ -85,8 +75,7 @@ within the search performed, and does not assert its absence. \
  CellChangeTimes->{{3.9988025877246933`*^9, 3.998802665383087*^9}, {
    3.9988029533640327`*^9, 3.9988029636521797`*^9}, {3.998982297903219*^9, 
    3.9989823041095047`*^9}, {3.998982446944971*^9, 3.998982673747984*^9}, 
-   3.9989828256090584`*^9, {3.9989831326616573`*^9, 
-   3.9989831559383926`*^9}},ExpressionUUID->"df26af14-08c8-47df-a845-\
+   3.9989828256090584`*^9},ExpressionUUID->"df26af14-08c8-47df-a845-\
 cf5cfc971f16"],
 
 Cell[CellGroupData[{
@@ -101,7 +90,7 @@ a99ab2a1dee9"],
 
 Cell["\<\
 Evaluate the initialisation cells to import all three database files and \
-define every function. Reevaluate it after replacing data files. \
+define every function. Reevaluate them after replacing data files. \
 \>", "Text",
  CellChangeTimes->{{3.998964374034109*^9, 
   3.9989644082289257`*^9}},ExpressionUUID->"e95ee4a4-0352-024b-8516-\
@@ -918,7 +907,7 @@ Cell[BoxData[{
  RowBox[{
   RowBox[{"d", " ", "=", " ", "3"}], ";", " ", 
   RowBox[{"k", " ", "=", " ", 
-   RowBox[{"-", "1"}]}], ";"}], "\n", 
+   RowBox[{"-", "2"}]}], ";"}], "\n", 
  RowBox[{
   RowBox[{"parameterRules", " ", "=", " ", 
    RowBox[{"{", 
@@ -1362,7 +1351,7 @@ Cell[BoxData[{
    RowBox[{
    "Checks", " ", "that", " ", "chosen", " ", "background", " ", "solves", " ",
      "equation", " ", 
-    RowBox[{"(", "5", ")"}], " ", "of", " ", "the", " ", "manuscript"}], " ", 
+    RowBox[{"(", "6", ")"}], " ", "of", " ", "the", " ", "manuscript"}], " ", 
    "*)"}]}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"(*", 
@@ -1374,17 +1363,7 @@ Cell[BoxData[{
  CellChangeTimes->{{3.9989666394151955`*^9, 3.9989666928927402`*^9}, {
   3.99896680728088*^9, 3.998966807456129*^9}},
  CellLabel->
-  "In[264]:=",ExpressionUUID->"e9db9edf-8e9b-eb4c-9b78-78ffacdbbbae"],
-
-Cell[BoxData[
- RowBox[{"{", 
-  RowBox[{"1.554312234475219`*^-14", ",", "\<\"Below treshold\"\>"}], 
-  "}"}]], "Output",
- CellChangeTimes->{3.9989668083944473`*^9, 3.9989672870999413`*^9, 
-  3.9989696008304253`*^9, 3.9989823733985825`*^9, 3.998982695556757*^9, 
-  3.9989828737936325`*^9},
- CellLabel->
-  "Out[264]=",ExpressionUUID->"b146c4f0-3ef1-684d-aa62-355d4fdc2708"]
+  "In[264]:=",ExpressionUUID->"e9db9edf-8e9b-eb4c-9b78-78ffacdbbbae"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -1510,65 +1489,3 @@ FrontEndVersion->"15.0 for Microsoft Windows (64-bit) (July 2, 2026)",
 StyleDefinitions->"Default.nb",
 ExpressionUUID->"f8688304-eb0e-124d-bad0-88eb6d3e0ccd"
 ]
-(* End of Notebook Content *)
-
-(* Internal cache information *)
-(*CellTagsOutline
-CellTagsIndex->{}
-*)
-(*CellTagsIndex
-CellTagsIndex->{}
-*)
-(*NotebookFileOutline
-Notebook[{
-Cell[CellGroupData[{
-Cell[626, 23, 129, 0, 96, "Title",ExpressionUUID->"1d9bf42c-3a83-b641-9e87-37f0b277ca73"],
-Cell[758, 25, 3740, 64, 825, "Abstract",ExpressionUUID->"df26af14-08c8-47df-a845-cf5cfc971f16"],
-Cell[CellGroupData[{
-Cell[4523, 93, 322, 6, 66, "Section",ExpressionUUID->"7298ba20-eb47-b342-bf83-a99ab2a1dee9"],
-Cell[4848, 101, 292, 6, 33, "Text",ExpressionUUID->"e95ee4a4-0352-024b-8516-65306890a898"],
-Cell[5143, 109, 24636, 634, 1414, "Input",ExpressionUUID->"d78bf175-0613-3f46-a0c1-57db07a25974",
- InitializationCell->True],
-Cell[CellGroupData[{
-Cell[29804, 747, 15748, 425, 70, "Input",ExpressionUUID->"336603b3-4a14-db4e-9080-2033b1eaf860",
- InitializationCell->True],
-Cell[45555, 1174, 560, 12, 70, "Output",ExpressionUUID->"d0eb4aaa-157c-014c-aaae-c7d2046bca71"]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[46164, 1192, 131, 3, 70, "Section",ExpressionUUID->"30130a7d-f580-ec47-af0d-59eb7983280c"],
-Cell[CellGroupData[{
-Cell[46320, 1199, 753, 18, 70, "Input",ExpressionUUID->"9ae07e14-5d3f-844e-a4ba-81938db374d8"],
-Cell[47076, 1219, 813, 17, 70, "Output",ExpressionUUID->"7c35721f-8a31-4c4f-b694-f58b856148fc"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[47926, 1241, 1038, 22, 70, "Input",ExpressionUUID->"e24f3983-0162-584f-9d44-5f8a7a04d45b"],
-Cell[48967, 1265, 880, 15, 70, "Output",ExpressionUUID->"552cab16-84fa-904d-b2ae-cc039a1ec12f"],
-Cell[49850, 1282, 642, 12, 70, "Output",ExpressionUUID->"10db3359-6573-4148-b854-966a588513cb"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[50529, 1299, 967, 19, 70, "Input",ExpressionUUID->"2d572912-32e7-c545-83bc-78b26ac39dd8"],
-Cell[51499, 1320, 1422, 32, 70, "Output",ExpressionUUID->"cfb863a4-e7f5-7847-bb6b-e83015754b28"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[52958, 1357, 755, 19, 70, "Input",ExpressionUUID->"e9db9edf-8e9b-eb4c-9b78-78ffacdbbbae"],
-Cell[53716, 1378, 370, 8, 70, "Output",ExpressionUUID->"b146c4f0-3ef1-684d-aa62-355d4fdc2708"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[54123, 1391, 1009, 22, 70, "Input",ExpressionUUID->"f4099bfb-3e5c-914a-8042-e6f88c2f09d4"],
-Cell[55135, 1415, 616, 12, 70, "Output",ExpressionUUID->"b8627c1f-e65b-9c46-a7ed-d1f22824db34"],
-Cell[55754, 1429, 292, 5, 70, "Output",ExpressionUUID->"62190eaf-3f3a-794e-821a-ec955b3fa623"],
-Cell[56049, 1436, 289, 5, 70, "Output",ExpressionUUID->"3cdd0985-1880-e04e-9a67-8bdd6a2cd373"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[56375, 1446, 1049, 24, 70, "Input",ExpressionUUID->"7a826f3f-1142-6a42-8f5e-09c92017ffed"],
-Cell[57427, 1472, 1412, 27, 70, "Output",ExpressionUUID->"bb4eae88-aa9a-084d-b747-bdb232cb82ad"]
-}, Open  ]]
-}, Open  ]]
-}, Open  ]]
-}
-]
-*)
-
-(* End of internal cache information *)
-

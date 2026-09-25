@@ -5,7 +5,7 @@
     "reference_section": "All supplied values use varphi(r=0)=0; varphi runs along each scaling solution and the other 21 fields are constant",
     "precision": "Decimal strings preserving binary64 reconstruction values",
     "equivalence": "Values are a representative of each verified SO(7)/parity orbit",
-    "dilaton_profile": "varphi(r)=-eta*r/L_AdS at r=0 reference; the twenty-one shape fields are constant"
+    "dilaton_profile": "varphi(r)=-eta*r/(2*L_AdS), with varphi(0)=0; equivalently varphi(z)=(eta/2)*log(z/L_AdS) for z=L_AdS*exp(-r/L_AdS). The twenty-one shape fields are constant."
   },
   "solutions": [
     {
