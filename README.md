@@ -1,6 +1,6 @@
 # Electric ISO(7) scale-covariant backgrounds
 
-This is an ancillary database to accompany the paper **Scale covariant holography**. (arXiv link to be added.)
+This is an ancillary database to accompany the paper **Scale-Covariant Holography**. (arXiv link to be added.)
 
 A catalogue of 78 scaling backgrounds in four-dimensional electric ISO(7) maximal gauged supergravity, with supersymmetry, continuous and discrete symmetry data, fluctuation spectra, and explicit scalar-field representatives. The accompanying Mathematica notebook provides commands to explore the catalogue and check the scaling-background equations.
 
