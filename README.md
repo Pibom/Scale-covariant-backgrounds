@@ -1,4 +1,4 @@
-# Electric ISO(7) scaling backgrounds
+# Electric ISO(7) scale-covariant backgrounds
 
 This is an ancillary database to accompany the paper **Scale covariant holography**. (arXiv link to be added.)
 
