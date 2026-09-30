@@ -89,6 +89,8 @@ The real and imaginary parts are decimal strings. AdS length, exponent and backg
 
 Bosonic spectrum quantities are labelled $M^2L_{\mathrm{AdS}}^2$ and fermionic quantities $ML_{\mathrm{AdS}}$.
 
+All values are stored at binary64 precision; higher-precision solutions can be obtained using Mathematica’s `FindRoot` with an increased `WorkingPrecision`, taking the stored values as initial guesses.
+
 ## Equation checks and interpretation
 
 The notebook defines `scalingEquations` for the 21 constant scalar fields. `backgroundEquations` substitutes the algebraic expressions for `eta` and `LAdS`. `CheckBackground[x]` tests 23 residuals in total: the 21 shape equations and the two relations fixing the exponent and radius. It returns the largest absolute residual and a status string, with a passing threshold strictly below $10^{-10}$.
