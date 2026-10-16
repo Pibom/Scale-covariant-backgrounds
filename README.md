@@ -48,7 +48,7 @@ For example, background 1 is `Z666666`, with continuous symmetry SO(7), $\mathca
 | --- | --- |
 | `indexForLabel[label]`, `label[index]` | Conversion between catalogue labels and indices. |
 | `AdSLength[x]`, `etaValue[x]` | The stored dimensionless AdS length and scaling exponent. |
-| `supersymmetry[x]` | The number of real Poincare supercharges. |
+| `supersymmetry[x]` | An association containing `N` and `real_poincare_supercharges`, with $2\mathcal{N}$ real Poincare supercharges. |
 | `globalSymmetry[x]` | The full global symmetry. |
 | `continuousSymmetryGroup[x]`, `discreteSymmetryGroup[x]` | Continuous and discrete symmetry group. |
 | `BFStable[x]` | BF-stability Boolean. |
@@ -74,7 +74,7 @@ varphi, X1, X2, X3, X4, X5, X6, Chi1, ..., Chi15
 
 `X1` through `X6` are positive multiplicative coordinates; their stored values are not logarithms. The `Chi` fields are real. Each background's `values` array follows the `fields` array in `model_22_scalars.json`. In Mathematica, use `fields` and `BackgroundRules[x]` to work with the notebook's field symbols.
 
-The model has potential `V`, dilaton kinetic term `-(h1/2) (dvarphi)^2` and 21 mixed dilaton-scalar kinetic terms `-(h2m/2) (dvarphi) dscalar`. The scalar metric $G_{mn}$ is not needed for the minimisation procedure and therefore not included. At the SO(7) origin, $V=-35 g^2 / 2$. The exported expressions supply the functions needed for the background equations. Formula strings use Wolfram Language `InputForm` with exact integer and rational coefficients, and the notebook imports them automatically.
+The model's action contains `+V`, dilaton kinetic term `-(h1/2) (dvarphi)^2` and 21 mixed dilaton-scalar kinetic terms `-h2m (dvarphi).dscalar`, as specified by `conventions.action_density` in `model_22_scalars.json`. The scalar metric $G_{mn}$ is not needed for the minimisation procedure and therefore not included. At the SO(7) origin ($X_1=\cdots=X_6=1$ and all `Chi` fields zero, with $\varphi=0$ at the reference slice), $V=+35 g^2 / 2$, giving $V=35/2$ for $g=1$. The exported expressions supply the functions needed for the background equations. Formula strings use Wolfram Language `InputForm` with exact integer and rational coefficients, and the notebook imports them automatically.
 
 In `scaling_backgrounds.json`, `solutions` contains the records and `spectrum_definitions` defines the five sectors. Each spectrum contains a `physical_field_count` and a `levels` array. A level has the form
 
